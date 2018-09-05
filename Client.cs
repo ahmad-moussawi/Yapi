@@ -21,10 +21,10 @@ namespace Yapi
 
         public async Task<Response> Send(
             string method,
-            string url,
-            object query,
-            object data,
-            Dictionary<string, IEnumerable<string>> headers
+            string url = "",
+            object query = null,
+            object data = null,
+            Dictionary<string, IEnumerable<string>> headers = null
         )
         {
 
