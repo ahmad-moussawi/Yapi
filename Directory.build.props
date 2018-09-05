@@ -1,0 +1,38 @@
+<Project>
+  <Import Project="version.props"/>
+  <PropertyGroup>
+    <Copyright>2018 Yapi</Copyright>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <PackageId>$(AssemblyName)</PackageId>
+    <PackageReleaseNotes>https://github.com/ahmad-moussawi/yapi</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/ahmad-moussawi/yapi</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/ahmad-moussawi/yapi/licence</PackageLicenseUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/ahmad-moussawi/yapi</RepositoryUrl>
+
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>embedded</DebugType>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <IncludeSymbols>false</IncludeSymbols>
+    <VersionSuffix Condition="'$(VersionSuffix)' != '' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
+  </PropertyGroup>
+
+  <!-- Workarounds for https://github.com/NuGet/Home/issues/4853 -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramwork)' == 'net451' ">
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <AddAdditionalExplicitAssemblyReferences>false</AddAdditionalExplicitAssemblyReferences>
+  </PropertyGroup>
+
+  <!-- Because of https://github.com/NuGet/Home/issues/4853 -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' ">
+    <Reference Include="System"/>
+    <Reference Include="System.Core"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.1" PrivateAssets="All" />
+    <PackageReference Include="NuGet.Build.Tasks.Pack" Version="4.6.2" PrivateAssets="All" />
+  </ItemGroup>
+</Project>
