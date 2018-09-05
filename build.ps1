@@ -87,9 +87,19 @@ if($DebugBuild)
     Msg "`tDEBUG BUILD" $msgColor.Attention
     $BuildConfiguration = 'Debug'
 }
-if($BuildNumber -eq 0 -and $PullRequestNumber -eq 0) { Die "Build Number or Pull Request Number must be supplied" }
-if(!(Test-Path "version.props")) { Die "Unable to locate required file: version.props" }
+
+if($BuildNumber -eq 0 -and $PullRequestNumber -eq 0)
+{
+    Die "Build Number or Pull Request Number must be supplied"
+}
+
+if(!(Test-Path "version.props"))
+{
+    Die "Unable to locate required file: version.props"
+}
+
 $outputPath = "$PSScriptRoot\.nupkgs"
+
 $stdSwitches = " /p:Configuration=$BuildConfiguration /nologo /verbosity:d /p:BuildNumber=$BuildNumber"
 
 if($SourceLinkEnable)
