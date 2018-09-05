@@ -30,7 +30,7 @@ namespace Yapi
 
             var request = new HttpRequestMessage();
 
-            method = method.ToLower();
+            method = method.ToUpper();
 
             request.Method = new HttpMethod(method);
 
@@ -47,7 +47,7 @@ namespace Yapi
 
             }
 
-            request.RequestUri = new Uri(url);
+            request.RequestUri = new Uri(http.BaseAddress, url);
 
             if (data != null)
             {

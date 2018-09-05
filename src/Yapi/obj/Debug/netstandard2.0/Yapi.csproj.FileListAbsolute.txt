@@ -1,0 +1,7 @@
+/Users/ahmad/web/Yapi/src/Yapi/bin/Debug/netstandard2.0/Yapi.deps.json
+/Users/ahmad/web/Yapi/src/Yapi/bin/Debug/netstandard2.0/Yapi.dll
+/Users/ahmad/web/Yapi/src/Yapi/obj/Debug/netstandard2.0/Yapi.csprojAssemblyReference.cache
+/Users/ahmad/web/Yapi/src/Yapi/obj/Debug/netstandard2.0/Yapi.csproj.CoreCompileInputs.cache
+/Users/ahmad/web/Yapi/src/Yapi/obj/Debug/netstandard2.0/Yapi.AssemblyInfoInputs.cache
+/Users/ahmad/web/Yapi/src/Yapi/obj/Debug/netstandard2.0/Yapi.AssemblyInfo.cs
+/Users/ahmad/web/Yapi/src/Yapi/obj/Debug/netstandard2.0/Yapi.dll

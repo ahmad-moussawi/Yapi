@@ -13,12 +13,12 @@ namespace Yapi
 
         public Dictionary<string, IEnumerable<string>> HeadersFor(string method)
         {
-            method = method.ToLower();
+            method = method.ToUpper();
 
-            if (method == "get") return HeadersGet;
-            if (method == "post") return HeadersPost;
-            if (method == "put") return HeadersPut;
-            if (method == "delete") return HeadersDelete;
+            if (method == "GET") return HeadersGet;
+            if (method == "POST") return HeadersPost;
+            if (method == "PUT") return HeadersPut;
+            if (method == "DELETE") return HeadersDelete;
 
             // empty
             return new Dictionary<string, IEnumerable<string>>();
