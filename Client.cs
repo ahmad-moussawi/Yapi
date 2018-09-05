@@ -8,11 +8,11 @@ using Newtonsoft.Json;
 
 namespace Yapi
 {
-    public class Yapi
+    public class Client
     {
         protected HttpClient http = new HttpClient();
 
-        public Yapi(string baseUrl)
+        public Client(string baseUrl)
         {
             http.BaseAddress = new Uri(baseUrl);
         }
