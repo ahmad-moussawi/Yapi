@@ -147,7 +147,7 @@ foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -R
     Remove-Item -Path $nuPackage.FullName -Force
 }
 
-$packCmd = "dotnet pack /nologo /verbosity:d --output=`"$outputPath`" /p:Configuration=$BuildConfiguration /p:BuildNumber=$BuildNumber --no-build --no-restore"
+$packCmd = "dotnet pack --version-suffix=pre-$VersionSuffix --verbosity=d --output=`"$outputPath`" --configuration=$BuildConfiguration /p:BuildNumber=$BuildNumber --no-build --no-restore"
 Invoke-ExpressionEx $packCmd
 foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -Recurse))
 {
