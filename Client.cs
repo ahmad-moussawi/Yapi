@@ -17,7 +17,7 @@ namespace Yapi
             http.BaseAddress = new Uri(baseUrl);
         }
 
-        public async Task<object> Send(
+        public async Task<Response> Send(
             string method,
             string url,
             object query,
