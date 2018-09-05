@@ -99,7 +99,8 @@ if($SourceLinkEnable)
 
 $versionProps = [xml](Get-Content "version.props")
 $versionPrefix = $versionProps.Project.PropertyGroup.VersionPrefix
-$versionSuffix = $versionProps.Project.PropertyGroup.VersionSuffix
+# $versionSuffix = $versionProps.Project.PropertyGroup.VersionSuffix
+$versionSuffix = $BuildNumber
 
 Msg "`tRun Parameters:" $msgColor.Attention
 Msg "`t`tVersion: $versionPrefix"
