@@ -12,6 +12,8 @@ namespace Yapi
     {
         protected HttpClient http = new HttpClient();
 
+        public Config DefaultConfig = new Config();
+
         public Client(string baseUrl)
         {
             http.BaseAddress = new Uri(baseUrl);
@@ -27,6 +29,8 @@ namespace Yapi
         {
 
             var request = new HttpRequestMessage();
+
+            method = method.ToLower();
 
             request.Method = new HttpMethod(method);
 
@@ -56,12 +60,28 @@ namespace Yapi
 
             if (headers != null)
             {
-                foreach (var header in headers)
+                // add common headers
+                foreach (var header in DefaultConfig.HeadersCommon)
                 {
                     request.Headers.Add(header.Key, header.Value);
                 }
-            }
 
+                // add request specific headers
+                foreach (var header in DefaultConfig.HeadersFor(method))
+                {
+                    request.Headers.Add(header.Key, header.Value);
+                }
+
+                foreach (var header in headers)
+                {
+                    if (request.Headers.Contains(header.Key))
+                    {
+                        request.Headers.Remove(header.Key);
+                    }
+
+                    request.Headers.Add(header.Key, header.Value);
+                }
+            }
 
             var rawResponse = await http.SendAsync(request);
 
