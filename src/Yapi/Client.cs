@@ -24,7 +24,11 @@ namespace Yapi
         public Client Configure(Config config)
         {
             DefaultConfig = config;
-            http.Timeout = TimeSpan.FromMilliseconds(DefaultConfig.Timeout);
+
+            var timeout = config.Timeout > 0 ? config.Timeout : 5000;
+
+            http.Timeout = TimeSpan.FromMilliseconds(timeout);
+
             config.HeadersCommon.Add("User-Agent", new[] { config.UserAgent });
             return this;
         }
