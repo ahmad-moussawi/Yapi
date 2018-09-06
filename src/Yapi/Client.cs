@@ -29,7 +29,7 @@ namespace Yapi
             return this;
         }
 
-        public async Task<Response> Send(
+        public async Task<Response<T>> Send<T>(
             string method,
             string url = "",
             object query = null,
@@ -97,10 +97,42 @@ namespace Yapi
 
             var content = await rawResponse.Content.ReadAsStringAsync();
 
-            var response = new Response(content, (int)rawResponse.StatusCode);
+            var response = new Response<T>(content, (int)rawResponse.StatusCode);
 
             return response;
 
+        }
+
+        public async Task<Response> Send(string method,
+            string url = "",
+            object query = null,
+            object data = null,
+            Dictionary<string, IEnumerable<string>> headers = null
+        )
+        {
+            var response = await Send<dynamic>(method, url, query, data, headers);
+
+            return (Response)response;
+        }
+
+        public Task<Response<T>> Get<T>(string url, object query = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
+        {
+            return Send<T>("GET", url, query, null, headers);
+        }
+
+        public Task<Response<T>> Post<T>(string url, object data = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
+        {
+            return Send<T>("POST", url, null, data, headers);
+        }
+
+        public Task<Response<T>> Delete<T>(string url, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
+        {
+            return Send<T>("DELETE", url, null, null, headers);
+        }
+
+        public Task<Response<T>> Put<T>(string url, object data = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
+        {
+            return Send<T>("PUT", url, null, data, headers);
         }
 
         public Task<Response> Get(string url, object query = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
