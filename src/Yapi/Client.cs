@@ -12,11 +12,21 @@ namespace Yapi
     {
         protected HttpClient http = new HttpClient();
 
-        public Config DefaultConfig = new Config();
+        public Config DefaultConfig;
 
-        public Client(string baseUrl)
+        public Client(string baseUrl, Config config = null)
         {
             http.BaseAddress = new Uri(baseUrl);
+
+            Configure(config ?? new Config());
+        }
+
+        public Client Configure(Config config)
+        {
+            DefaultConfig = config;
+            http.Timeout = TimeSpan.FromMilliseconds(DefaultConfig.Timeout);
+            config.HeadersCommon.Add("User-Agent", new[] { config.UserAgent });
+            return this;
         }
 
         public async Task<Response> Send(
@@ -91,6 +101,26 @@ namespace Yapi
 
             return response;
 
+        }
+
+        public Task<Response> Get(string url, object query = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
+        {
+            return Send("GET", url, query, null, headers);
+        }
+
+        public Task<Response> Post(string url, object data = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
+        {
+            return Send("POST", url, null, data, headers);
+        }
+
+        public Task<Response> Delete(string url, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
+        {
+            return Send("DELETE", url, null, null, headers);
+        }
+
+        public Task<Response> Put(string url, object data = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
+        {
+            return Send("PUT", url, null, data, headers);
         }
 
     }
