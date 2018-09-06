@@ -5,7 +5,7 @@ namespace Yapi
     public class Config
     {
         public string UserAgent { get; set; } = "Yapi CSharp Client";
-        public int Timeout { get; set; }
+        public int Timeout { get; set; } = 30000;
 
         public Dictionary<string, IEnumerable<string>> HeadersCommon { get; set; } = new Dictionary<string, IEnumerable<string>>();
         public Dictionary<string, IEnumerable<string>> HeadersGet { get; set; } = new Dictionary<string, IEnumerable<string>>();
