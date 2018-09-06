@@ -116,7 +116,7 @@ namespace Yapi
         {
             var response = await Send<dynamic>(method, url, query, data, headers);
 
-            return (Response)response;
+            return new Response(response.Raw(), response.StatusCode);
         }
 
         public Task<Response<T>> Get<T>(string url, object query = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)

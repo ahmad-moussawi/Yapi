@@ -5,14 +5,14 @@ namespace Yapi
     public class Response<T>
     {
         private readonly string content;
-        private readonly int statusCode;
+        public readonly int StatusCode;
 
-        public bool IsSuccess { get => statusCode >= 200 && statusCode < 300; }
+        public bool IsSuccess { get => StatusCode >= 200 && StatusCode < 300; }
 
         public Response(string content, int statusCode)
         {
             this.content = content;
-            this.statusCode = statusCode;
+            this.StatusCode = statusCode;
         }
 
         public T Json()
