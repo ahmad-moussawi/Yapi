@@ -72,20 +72,20 @@ namespace Yapi
                 }));
             }
 
+            // add common headers
+            foreach (var header in DefaultConfig.HeadersCommon)
+            {
+                request.Headers.Add(header.Key, header.Value);
+            }
+
+            // add request specific headers
+            foreach (var header in DefaultConfig.HeadersFor(method))
+            {
+                request.Headers.Add(header.Key, header.Value);
+            }
+
             if (headers != null)
             {
-                // add common headers
-                foreach (var header in DefaultConfig.HeadersCommon)
-                {
-                    request.Headers.Add(header.Key, header.Value);
-                }
-
-                // add request specific headers
-                foreach (var header in DefaultConfig.HeadersFor(method))
-                {
-                    request.Headers.Add(header.Key, header.Value);
-                }
-
                 foreach (var header in headers)
                 {
                     if (request.Headers.Contains(header.Key))
