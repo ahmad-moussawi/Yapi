@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace Yapi
 {
-    public class Response
+    public class Response<T>
     {
         private readonly string content;
         private readonly int statusCode;
@@ -15,16 +15,22 @@ namespace Yapi
             this.statusCode = statusCode;
         }
 
-        public T Json<T>()
+        public T Json()
         {
             return JsonConvert.DeserializeObject<T>(content);
         }
 
-        public dynamic Json() => Json<dynamic>();
-
         public string Raw()
         {
             return content;
+        }
+    }
+
+    public class Response : Response<dynamic>
+    {
+        public Response(string content, int statusCode) : base(content, statusCode)
+        {
+
         }
 
     }
