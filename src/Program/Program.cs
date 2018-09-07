@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Yapi;
 
 namespace Program
 {
@@ -12,7 +13,16 @@ namespace Program
 
         async static Task MainAsync(string[] args)
         {
-            var http = new Yapi.Client("https://jsonplaceholder.typicode.com");
+            var config = new Config();
+
+            config.OnBeforeSend = (request, c) => {
+                foreach (var header in request.Headers)
+                {
+                    Console.WriteLine(header.Key + ": " + string.Join(", ", header.Value));
+                }
+            };
+
+            var http = new Yapi.Client("https://jsonplaceholder.typicode.com", config);
 
             var response = await http.Send("get", "todos");
 

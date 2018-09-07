@@ -43,7 +43,6 @@ namespace Yapi
         {
 
             var request = new HttpRequestMessage();
-
             method = method.ToUpper();
 
             request.Method = new HttpMethod(method);
@@ -95,6 +94,11 @@ namespace Yapi
 
                     request.Headers.Add(header.Key, header.Value);
                 }
+            }
+
+            if (DefaultConfig.OnBeforeSend != null)
+            {
+                DefaultConfig.OnBeforeSend(request, DefaultConfig);
             }
 
             var rawResponse = await http.SendAsync(request);

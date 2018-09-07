@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Net.Http;
 
 namespace Yapi
 {
@@ -6,7 +8,7 @@ namespace Yapi
     {
         public string UserAgent { get; set; } = "Yapi CSharp Client";
         public int Timeout { get; set; } = 30000;
-
+        public Action<HttpRequestMessage, Config> OnBeforeSend;
         public Dictionary<string, IEnumerable<string>> HeadersCommon { get; set; } = new Dictionary<string, IEnumerable<string>>();
         public Dictionary<string, IEnumerable<string>> HeadersGet { get; set; } = new Dictionary<string, IEnumerable<string>>();
         public Dictionary<string, IEnumerable<string>> HeadersPost { get; set; } = new Dictionary<string, IEnumerable<string>>();
