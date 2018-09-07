@@ -105,6 +105,11 @@ namespace Yapi
 
             var content = await rawResponse.Content.ReadAsStringAsync();
 
+            if (DefaultConfig.OnAfterReceive != null)
+            {
+                content = DefaultConfig.OnAfterReceive(content);
+            }
+
             var response = new Response<T>(content, (int)rawResponse.StatusCode);
 
             return response;
