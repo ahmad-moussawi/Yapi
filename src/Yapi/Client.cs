@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.WebUtilities;
 using Newtonsoft.Json;
 
 namespace Yapi
@@ -13,6 +12,24 @@ namespace Yapi
         protected HttpClient http = new HttpClient();
 
         public Config DefaultConfig;
+        public Dictionary<string, IEnumerable<string>> HeadersCommon { get; set; } = new Dictionary<string, IEnumerable<string>>();
+        public Dictionary<string, IEnumerable<string>> HeadersGet { get; set; } = new Dictionary<string, IEnumerable<string>>();
+        public Dictionary<string, IEnumerable<string>> HeadersPost { get; set; } = new Dictionary<string, IEnumerable<string>>();
+        public Dictionary<string, IEnumerable<string>> HeadersPut { get; set; } = new Dictionary<string, IEnumerable<string>>();
+        public Dictionary<string, IEnumerable<string>> HeadersDelete { get; set; } = new Dictionary<string, IEnumerable<string>>();
+
+        public Dictionary<string, IEnumerable<string>> HeadersFor(string method)
+        {
+            method = method.ToUpper();
+
+            if (method == "GET") return HeadersGet;
+            if (method == "POST") return HeadersPost;
+            if (method == "PUT") return HeadersPut;
+            if (method == "DELETE") return HeadersDelete;
+
+            // empty
+            return new Dictionary<string, IEnumerable<string>>();
+        }
 
         public Client(string baseUrl, Config config = null)
         {
@@ -29,62 +46,59 @@ namespace Yapi
 
             http.Timeout = TimeSpan.FromMilliseconds(timeout);
 
-            config.HeadersCommon.Add("User-Agent", new[] { config.UserAgent });
+            HeadersCommon.Add("User-Agent", new[] { config.UserAgent });
+
             return this;
         }
 
         public async Task<Response<T>> Send<T>(
             string method,
             string url = "",
-            object query = null,
-            object data = null,
-            Dictionary<string, IEnumerable<string>> headers = null
+            Config config = null
         )
         {
 
-            var request = new HttpRequestMessage();
+            config = mergeConfig(config, DefaultConfig);
+
             method = method.ToUpper();
 
-            request.Method = new HttpMethod(method);
-
-            if (query != null)
+            var request = new HttpRequestMessage
             {
-                var dict = new Dictionary<string, string>();
+                Method = new HttpMethod(method),
+                RequestUri = new Uri(http.BaseAddress, buildUrl(url, config.Query)),
+            };
 
-                foreach (var prop in query.GetType().GetProperties())
-                {
-                    dict.Add(prop.Name, prop.GetValue(query).ToString());
-                }
-
-                url = QueryHelpers.AddQueryString(url, dict);
-
-            }
-
-            request.RequestUri = new Uri(http.BaseAddress, url);
-
-            if (data != null)
+            if (config.Data != null)
             {
-                request.Content = new StringContent(JsonConvert.SerializeObject(data, new JsonSerializerSettings
+                var data = config.Data;
+
+                var jsonSettings = new JsonSerializerSettings
                 {
                     NullValueHandling = NullValueHandling.Ignore,
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                }));
+                };
+
+                var json = JsonConvert.SerializeObject(data, jsonSettings);
+
+                request.Content = new StringContent(json);
             }
 
             // add common headers
-            foreach (var header in DefaultConfig.HeadersCommon)
+            foreach (var header in HeadersCommon)
             {
                 request.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
 
             // add request specific headers
-            foreach (var header in DefaultConfig.HeadersFor(method))
+            foreach (var header in HeadersFor(method))
             {
                 request.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
 
-            if (headers != null)
+            if (config.Headers != null)
             {
+                var headers = config.Headers;
+
                 foreach (var header in headers)
                 {
                     if (request.Headers.Contains(header.Key))
@@ -96,18 +110,18 @@ namespace Yapi
                 }
             }
 
-            if (DefaultConfig.OnBeforeSend != null)
+            if (config.OnBeforeSend != null)
             {
-                DefaultConfig.OnBeforeSend(request, DefaultConfig);
+                config.OnBeforeSend(request, DefaultConfig);
             }
 
             var rawResponse = await http.SendAsync(request);
 
             var content = await rawResponse.Content.ReadAsStringAsync();
 
-            if (DefaultConfig.OnAfterReceive != null)
+            foreach (var transformer in config.ResponseTransformers)
             {
-                content = DefaultConfig.OnAfterReceive(content);
+                content = transformer(content);
             }
 
             var response = new Response<T>(content, (int)rawResponse.StatusCode);
@@ -116,56 +130,85 @@ namespace Yapi
 
         }
 
-        public async Task<Response> Send(string method,
-            string url = "",
-            object query = null,
-            object data = null,
-            Dictionary<string, IEnumerable<string>> headers = null
-        )
+        public async Task<Response<T>> Get<T>(string url = "", object query = null, Config config = null)
         {
-            var response = await Send<dynamic>(method, url, query, data, headers);
+            config = config ?? new Config { Query = query };
 
-            return new Response(response.Raw(), response.StatusCode);
+            return await Send<T>("GET", url, config);
         }
 
-        public Task<Response<T>> Get<T>(string url, object query = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
+        public async Task<Response<T>> Post<T>(string url = "", object data = null, Config config = null)
         {
-            return Send<T>("GET", url, query, null, headers);
+            config = config ?? new Config { Data = data };
+
+            return await Send<T>("POST", url, config);
         }
 
-        public Task<Response<T>> Post<T>(string url, object data = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
+
+        private Config mergeConfig(Config original, Config defaultConfig)
         {
-            return Send<T>("POST", url, null, data, headers);
+            if (original == null)
+            {
+                return defaultConfig;
+            }
+
+            if (defaultConfig == null)
+            {
+                return original;
+            }
+
+            var config = new Config();
+
+            config.Timeout = original.Timeout > 0 ? original.Timeout : defaultConfig.Timeout;
+
+            config.Query = original.Query ?? defaultConfig.Query;
+            config.Data = original.Data ?? defaultConfig.Data;
+
+            foreach (var header in original.Headers)
+            {
+                config.Headers.Add(header.Key, header.Value);
+            }
+
+            foreach (var header in defaultConfig.Headers)
+            {
+                if (!config.Headers.ContainsKey(header.Key))
+                {
+                    config.Headers[header.Key] = header.Value;
+                }
+            }
+
+            config.OnBeforeSend = original.OnBeforeSend ?? defaultConfig.OnBeforeSend;
+            config.ResponseTransformers = original.ResponseTransformers ?? defaultConfig.ResponseTransformers;
+
+            config.UserAgent = string.IsNullOrEmpty(original.UserAgent) ? defaultConfig.UserAgent : original.UserAgent;
+
+            return config;
         }
 
-        public Task<Response<T>> Delete<T>(string url, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
+        private string buildUrl(string url, object query)
         {
-            return Send<T>("DELETE", url, null, null, headers);
-        }
+            if (query == null)
+            {
+                return url;
+            }
 
-        public Task<Response<T>> Put<T>(string url, object data = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
-        {
-            return Send<T>("PUT", url, null, data, headers);
-        }
+            if (string.IsNullOrEmpty(url))
+            {
+                return url;
+            }
 
-        public Task<Response> Get(string url, object query = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
-        {
-            return Send("GET", url, query, null, headers);
-        }
+            var arr = new List<string> { };
 
-        public Task<Response> Post(string url, object data = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
-        {
-            return Send("POST", url, null, data, headers);
-        }
+            foreach (var prop in query.GetType().GetProperties())
+            {
+                var key = System.Uri.EscapeDataString(prop.Name);
+                var value = System.Uri.EscapeDataString(prop.GetValue(query).ToString());
+                arr.Add($"{key}={value}");
+            }
 
-        public Task<Response> Delete(string url, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
-        {
-            return Send("DELETE", url, null, null, headers);
-        }
+            var joiner = url.Contains("?") ? "" : "?";
 
-        public Task<Response> Put(string url, object data = null, Config config = null, Dictionary<string, IEnumerable<string>> headers = null)
-        {
-            return Send("PUT", url, null, data, headers);
+            return url + joiner + string.Join("&", arr);
         }
 
     }
