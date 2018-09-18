@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Yapi;
 
 namespace Program
@@ -22,6 +23,22 @@ namespace Program
             http.Debug = true;
 
             var response = await http.Send<dynamic>("get", "todos/1");
+
+            response.Then(r =>
+            {
+                Console.WriteLine("Response success");
+                Console.WriteLine(JsonConvert.SerializeObject(r));
+            })
+            .Catch(err =>
+            {
+                Console.WriteLine("Response failed");
+                Console.WriteLine(JsonConvert.SerializeObject(err));
+            })
+            .Finally(r =>
+            {
+                // log repsonse
+            });
+
 
         }
     }

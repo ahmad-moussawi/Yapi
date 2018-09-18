@@ -1,3 +1,4 @@
+using System;
 using Newtonsoft.Json;
 
 namespace Yapi
@@ -23,6 +24,37 @@ namespace Yapi
         public string Raw()
         {
             return content;
+        }
+
+        public Response<T> Then(Action<T> onSuccess)
+        {
+            if (onSuccess != null && IsSuccess)
+            {
+                onSuccess(Json());
+            }
+
+            return this;
+        }
+
+        public Response<T> Catch(Action<T> onFail)
+        {
+            if (onFail != null && !IsSuccess)
+            {
+                onFail(Json());
+            }
+
+            return this;
+
+        }
+
+        public Response<T> Finally(Action<T> always)
+        {
+            if (always != null)
+            {
+                always(Json());
+            }
+
+            return this;
         }
     }
 
