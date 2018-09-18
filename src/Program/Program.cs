@@ -13,28 +13,16 @@ namespace Program
 
         async static Task MainAsync(string[] args)
         {
-            var config = new Config();
+            var http = new Yapi.Client("https://jsonplaceholder.typicode.com");
 
-            config.OnBeforeSend = (request, c) => {
-                foreach (var header in request.Headers)
-                {
-                    Console.WriteLine(header.Key + ": " + string.Join(", ", header.Value));
-                }
-            };
+            http.HeadersCommon.Add("Content-Type", new[] { "application/json" });
+            http.HeadersCommon.Add("Ballout", new[] { "Ballout Value" });
+            http.HeadersGet.Add("Content-Type", new[] { "application/bson" });
 
-            // config.HeadersCommon.Add("Authorization", new [] {"INVALIDAUTH"});
+            http.Debug = true;
 
-            var http = new Yapi.Client("https://jsonplaceholder.typicode.com", config);
+            var response = await http.Send<dynamic>("get", "todos/1");
 
-            var response = await http.Send("get", "todos");
-
-            var todos = response.IsSuccess ? response.Json() : null;
-
-            http.DefaultConfig.HeadersCommon["Authorization"] = new [] {"cobSession=08062013_2:1c8b1eb4e029165c8c729b4a4994aa430a586b0190e855984cb54558d13d37ad6cb893545c4555a9cec49aa42d00db2b012226878d8dbdbf16715e87ff76f2f3"};
-
-            var r2 = await http.Send("get", "todos");
-
-            Console.WriteLine(todos[0]);
         }
     }
 }

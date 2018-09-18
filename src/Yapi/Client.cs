@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -10,8 +11,8 @@ namespace Yapi
     public class Client
     {
         protected HttpClient http = new HttpClient();
-
         public Config DefaultConfig;
+        public bool Debug { get; set; } = false;
         public Dictionary<string, IEnumerable<string>> HeadersCommon { get; set; } = new Dictionary<string, IEnumerable<string>>();
         public Dictionary<string, IEnumerable<string>> HeadersGet { get; set; } = new Dictionary<string, IEnumerable<string>>();
         public Dictionary<string, IEnumerable<string>> HeadersPost { get; set; } = new Dictionary<string, IEnumerable<string>>();
@@ -46,7 +47,7 @@ namespace Yapi
 
             http.Timeout = TimeSpan.FromMilliseconds(timeout);
 
-            HeadersCommon.Add("User-Agent", new[] { config.UserAgent });
+            HeadersCommon["User-Agent"] = new[] { config.UserAgent };
 
             return this;
         }
@@ -59,8 +60,11 @@ namespace Yapi
         {
 
             config = mergeConfig(config, DefaultConfig);
-
             method = method.ToUpper();
+
+            // all headers
+            var headers = new Dictionary<string, string>();
+            var addedHeaders = new HashSet<string>();
 
             var request = new HttpRequestMessage
             {
@@ -82,42 +86,76 @@ namespace Yapi
 
                 request.Content = new StringContent(json);
             }
+            else
+            {
+                // always set a content to allow Content Headers even if no real content was provided
+                // i.e. in GET requests
+                request.Content = new StringContent("");
+            }
 
-            // add common headers
+            // add common headers first
             foreach (var header in HeadersCommon)
             {
-                request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                headers[header.Key] = string.Join(",", header.Value);
+            }
+
+            // add method specific headers
+            foreach (var header in HeadersFor(method))
+            {
+                headers[header.Key] = string.Join(",", header.Value);
             }
 
             // add request specific headers
-            foreach (var header in HeadersFor(method))
-            {
-                request.Headers.TryAddWithoutValidation(header.Key, header.Value);
-            }
-
             if (config.Headers != null)
             {
-                var headers = config.Headers;
-
-                foreach (var header in headers)
+                foreach (var header in config.Headers)
                 {
-                    if (request.Headers.Contains(header.Key))
-                    {
-                        request.Headers.Remove(header.Key);
-                    }
-
-                    request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                    headers[header.Key] = string.Join(",", header.Value);
                 }
             }
 
             if (config.OnBeforeSend != null)
             {
-                config.OnBeforeSend(request, DefaultConfig);
+                config.OnBeforeSend(request, config);
+            }
+
+            foreach (var header in headers)
+            {
+                // try to add the header for the request first
+                var added = request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+
+                // if not available for the request, then add it for the content
+                if (!added)
+                {
+                    request.Content.Headers.Remove(header.Key);
+                    request.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                }
+            }
+
+            if (Debug)
+            {
+                Console.WriteLine($"{request.Method} {request.RequestUri}");
+
+                foreach (var item in headers)
+                {
+                    Console.WriteLine($"{item.Key}: {string.Join(", ", item.Value)}");
+                }
             }
 
             var rawResponse = await http.SendAsync(request);
 
             var content = await rawResponse.Content.ReadAsStringAsync();
+
+            if (Debug)
+            {
+                Console.WriteLine();
+                foreach (var item in rawResponse.Headers)
+                {
+                    Console.WriteLine($"{item.Key}: {string.Join(", ", item.Value)}");
+                }
+
+                Console.WriteLine("\n" + content);
+            }
 
             foreach (var transformer in config.ResponseTransformers)
             {
@@ -132,14 +170,16 @@ namespace Yapi
 
         public async Task<Response<T>> Get<T>(string url = "", object query = null, Config config = null)
         {
-            config = config ?? new Config { Query = query };
+            config = config ?? new Config();
+            config.Query = query;
 
             return await Send<T>("GET", url, config);
         }
 
         public async Task<Response<T>> Post<T>(string url = "", object data = null, Config config = null)
         {
-            config = config ?? new Config { Data = data };
+            config = config ?? new Config();
+            config.Data = data;
 
             return await Send<T>("POST", url, config);
         }
@@ -192,14 +232,11 @@ namespace Yapi
                 return url;
             }
 
-            if (string.IsNullOrEmpty(url))
-            {
-                return url;
-            }
+            url = url ?? "";
 
             var arr = new List<string> { };
 
-            foreach (var prop in query.GetType().GetProperties())
+            foreach (var prop in query.GetType().GetRuntimeProperties())
             {
                 var key = System.Uri.EscapeDataString(prop.Name);
                 var value = System.Uri.EscapeDataString(prop.GetValue(query).ToString());
