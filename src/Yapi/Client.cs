@@ -124,7 +124,7 @@ namespace Yapi
 
             if (config.OnBeforeSend != null)
             {
-                config.OnBeforeSend(request, config);
+                config.OnBeforeSend(request, headers, config);
             }
 
             foreach (var header in headers)
@@ -148,6 +148,8 @@ namespace Yapi
                 {
                     Console.WriteLine($"{item.Key}: {string.Join(", ", item.Value)}");
                 }
+
+                Console.WriteLine("\n" + (await request.Content.ReadAsStringAsync()));
             }
 
             var rawResponse = await http.SendAsync(request);
