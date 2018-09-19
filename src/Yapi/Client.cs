@@ -76,15 +76,23 @@ namespace Yapi
             {
                 var data = config.Data;
 
-                var jsonSettings = new JsonSerializerSettings
+                if (data is string d)
                 {
-                    NullValueHandling = NullValueHandling.Ignore,
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                };
+                    // if the developer has provided a string so pass it as is
+                    request.Content = new StringContent(d);
+                }
+                else
+                {
+                    var jsonSettings = new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore,
+                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                    };
 
-                var json = JsonConvert.SerializeObject(data, jsonSettings);
+                    var json = JsonConvert.SerializeObject(data, jsonSettings);
 
-                request.Content = new StringContent(json);
+                    request.Content = new StringContent(json);
+                }
             }
             else
             {

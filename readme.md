@@ -2,9 +2,9 @@
 
 
 # Yapi Http Client
-A lightweight Http Client for C#, built on top of the built `HttpClient` in dotnet framework.
+A lightweight Http Client for C#, built on top of the `HttpClient` class.
 
-This library was built to remove the restriction build in with the HttpClient shipped with dotnet.
+This library was built to remove the strict restrictions in the HttpClient shipped with dotnet.
 
 # Installation
 ```
@@ -25,7 +25,7 @@ http.HeadersGet.Add("Content-Type", new[] { "application/bson" });
 http.Debug = true;
 
 // invoke the request
-var response = await http.Send<Todo>("get", "todos/1");
+var response = await http.Get<Todo>("todos/1");
 
 response.Then(todo =>
 {
