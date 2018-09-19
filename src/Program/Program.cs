@@ -16,10 +16,6 @@ namespace Program
         {
             var http = new Yapi.Client("https://jsonplaceholder.typicode.com");
 
-            http.HeadersCommon.Add("Content-Type", new[] { "application/json" });
-            http.HeadersCommon.Add("Ballout", new[] { "Ballout Value" });
-            http.HeadersGet.Add("Content-Type", new[] { "application/bson" });
-
             http.Debug = true;
 
             var response = await http.Send<dynamic>("get", "todos/1");

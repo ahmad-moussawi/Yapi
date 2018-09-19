@@ -55,7 +55,8 @@ namespace Yapi
         public async Task<Response<T>> Send<T>(
             string method,
             string url = "",
-            Config config = null
+            Config config = null,
+            bool isJson = true
         )
         {
 
@@ -81,8 +82,9 @@ namespace Yapi
                     // if the developer has provided a string so pass it as is
                     request.Content = new StringContent(d);
                 }
-                else
+                else if (isJson)
                 {
+
                     var jsonSettings = new JsonSerializerSettings
                     {
                         NullValueHandling = NullValueHandling.Ignore,
@@ -92,6 +94,14 @@ namespace Yapi
                     var json = JsonConvert.SerializeObject(data, jsonSettings);
 
                     request.Content = new StringContent(json);
+                }
+                else
+                {
+                    // here we assume that the data is of type application/x-www-form-urlencoded
+
+                    var body = buildUrl("", data);
+
+                    request.Content = new StringContent(body);
                 }
             }
             else
@@ -104,13 +114,13 @@ namespace Yapi
             // add common headers first
             foreach (var header in HeadersCommon)
             {
-                headers[header.Key] = string.Join(",", header.Value);
+                headers[header.Key.ToLower()] = string.Join(",", header.Value);
             }
 
             // add method specific headers
             foreach (var header in HeadersFor(method))
             {
-                headers[header.Key] = string.Join(",", header.Value);
+                headers[header.Key.ToLower()] = string.Join(",", header.Value);
             }
 
             // add request specific headers
@@ -118,13 +128,13 @@ namespace Yapi
             {
                 foreach (var header in config.Headers)
                 {
-                    headers[header.Key] = string.Join(",", header.Value);
+                    headers[header.Key.ToLower()] = string.Join(",", header.Value);
                 }
             }
 
-            if (config.OnBeforeSend != null)
+            if (!headers.ContainsKey("content-type"))
             {
-                config.OnBeforeSend(request, headers, config);
+                headers["content-type"] = isJson ? "application/json" : "application/x-www-form-urlencoded";
             }
 
             foreach (var header in headers)
@@ -139,6 +149,12 @@ namespace Yapi
                     request.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
                 }
             }
+
+            if (config.OnBeforeSend != null)
+            {
+                config.OnBeforeSend(request, headers, config);
+            }
+
 
             if (Debug)
             {
@@ -164,7 +180,7 @@ namespace Yapi
                     Console.WriteLine($"{item.Key}: {string.Join(", ", item.Value)}");
                 }
 
-                Console.WriteLine("\n" + content);
+                Console.WriteLine("\n" + content + "\n");
             }
 
             foreach (var transformer in config.ResponseTransformers)
