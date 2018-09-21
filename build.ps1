@@ -100,7 +100,7 @@ if(!(Test-Path "version.props"))
 
 $outputPath = "$PSScriptRoot\.nupkgs"
 
-$stdSwitches = " /p:Configuration=$BuildConfiguration /nologo /verbosity:d /p:BuildNumber=$BuildNumber"
+$stdSwitches = " /p:Configuration=$BuildConfiguration /nologo /verbosity:diag /logger:`"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll`" /p:BuildNumber=$BuildNumber"
 
 if($SourceLinkEnable)
 {
@@ -157,7 +157,7 @@ foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -R
     Remove-Item -Path $nuPackage.FullName -Force
 }
 
-$packCmd = "dotnet pack src/Yapi/Yapi.csproj --version-suffix=pre-$VersionSuffix --verbosity=d --output=`"$outputPath`" --configuration=$BuildConfiguration /p:BuildNumber=$BuildNumber --no-build --no-restore"
+$packCmd = "dotnet pack src/Yapi/Yapi.csproj --version-suffix=pre-$VersionSuffix --verbosity=diag --output=`"$outputPath`" --configuration=$BuildConfiguration /p:BuildNumber=$BuildNumber --no-build --no-restore"
 Invoke-ExpressionEx $packCmd
 foreach($nuPackage in (Get-ChildItem -Path $OutputDirectory -Filter "*.nupkg" -Recurse))
 {
