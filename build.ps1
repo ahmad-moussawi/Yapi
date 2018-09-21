@@ -100,7 +100,7 @@ if(!(Test-Path "version.props"))
 
 $outputPath = "$PSScriptRoot\.nupkgs"
 
-$stdSwitches = " /p:Configuration=$BuildConfiguration /nologo /verbosity:diag /logger:`"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll`" /p:BuildNumber=$BuildNumber"
+$stdSwitches = " /p:Configuration=$BuildConfiguration /nologo /verbosity:diag /p:BuildNumber=$BuildNumber"
 
 if($SourceLinkEnable)
 {
