@@ -56,7 +56,8 @@ namespace Yapi
             string method,
             string url = "",
             Config config = null,
-            bool isJson = true
+            bool isJson = true,
+            bool ignoreDefaultHeaders = false
         )
         {
 
@@ -99,7 +100,7 @@ namespace Yapi
                 {
                     // here we assume that the data is of type application/x-www-form-urlencoded
 
-                    var body = buildUrl("", data);
+                    var body = buildUrl("", data).Substring(1);
 
                     request.Content = new StringContent(body);
                 }
@@ -111,16 +112,19 @@ namespace Yapi
                 request.Content = new StringContent("");
             }
 
-            // add common headers first
-            foreach (var header in HeadersCommon)
+            if (!ignoreDefaultHeaders)
             {
-                headers[header.Key.ToLower()] = string.Join(",", header.Value);
-            }
+                // add common headers first
+                foreach (var header in HeadersCommon)
+                {
+                    headers[header.Key.ToLower()] = string.Join(",", header.Value);
+                }
 
-            // add method specific headers
-            foreach (var header in HeadersFor(method))
-            {
-                headers[header.Key.ToLower()] = string.Join(",", header.Value);
+                // add method specific headers
+                foreach (var header in HeadersFor(method))
+                {
+                    headers[header.Key.ToLower()] = string.Join(",", header.Value);
+                }
             }
 
             // add request specific headers
@@ -185,7 +189,7 @@ namespace Yapi
 
             foreach (var transformer in config.ResponseTransformers)
             {
-                content = transformer(content);
+                content = transformer(content, rawResponse);
             }
 
             var response = new Response<T>(content, (int)rawResponse.StatusCode);
@@ -265,7 +269,17 @@ namespace Yapi
             foreach (var prop in query.GetType().GetRuntimeProperties())
             {
                 var key = System.Uri.EscapeDataString(prop.Name);
-                var value = System.Uri.EscapeDataString(prop.GetValue(query).ToString());
+                var value = prop.GetValue(query)?.ToString();
+
+                if (value != null)
+                {
+                    value = System.Uri.EscapeDataString(value);
+                }
+                else
+                {
+                    value = "";
+                }
+
                 arr.Add($"{key}={value}");
             }
 
