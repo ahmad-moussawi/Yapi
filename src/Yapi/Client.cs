@@ -105,12 +105,6 @@ namespace Yapi
                     request.Content = new StringContent(body);
                 }
             }
-            else
-            {
-                // always set a content to allow Content Headers even if no real content was provided
-                // i.e. in GET requests
-                request.Content = new StringContent("");
-            }
 
             if (!ignoreDefaultHeaders)
             {
@@ -136,9 +130,16 @@ namespace Yapi
                 }
             }
 
-            if (!headers.ContainsKey("content-type"))
+            if (new[] { "POST", "PUT" }.Contains(method))
             {
-                headers["content-type"] = isJson ? "application/json" : "application/x-www-form-urlencoded";
+                if (!headers.ContainsKey("content-type"))
+                {
+                    headers["content-type"] = isJson ? "application/json" : "application/x-www-form-urlencoded";
+                }
+            }
+            else
+            {
+                headers.Remove("content-type");
             }
 
             foreach (var header in headers)
@@ -147,7 +148,7 @@ namespace Yapi
                 var added = request.Headers.TryAddWithoutValidation(header.Key, header.Value);
 
                 // if not available for the request, then add it for the content
-                if (!added)
+                if (!added && request.Content != null)
                 {
                     request.Content.Headers.Remove(header.Key);
                     request.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
@@ -169,7 +170,11 @@ namespace Yapi
                     Console.WriteLine($"{item.Key}: {string.Join(", ", item.Value)}");
                 }
 
-                Console.WriteLine("\n" + (await request.Content.ReadAsStringAsync()));
+                if (request.Content != null)
+                {
+                    Console.WriteLine("\n" + (await request.Content.ReadAsStringAsync()));
+                }
+
             }
 
             var rawResponse = await http.SendAsync(request);
