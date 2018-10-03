@@ -19,8 +19,8 @@ nuget:
   project_feed: false
   disable_publish_on_pr: true
 
-build_script:
-  - ps: .\build.ps1 -BuildNumber "$env:APPVEYOR_BUILD_NUMBER" -PullRequestNumber "$env:APPVEYOR_PULL_REQUEST_NUMBER" -RunTests
+# build_script:
+#  - ps: .\build.ps1 -BuildNumber "$env:APPVEYOR_BUILD_NUMBER" -PullRequestNumber "$env:APPVEYOR_PULL_REQUEST_NUMBER" -RunTests
 
 test: off
 artifacts:
@@ -34,3 +34,9 @@ deploy:
       - master
   api_key:
     secure: eGhgEMKAC7HPLtRPPy1V6HoDpcjoH9pC1u+yMV2FzXVh6RB6msf3URAEk4hEUDG6
+- provider: NuGet
+  on:
+    branch: master
+    appveyor_repo_tag: true
+  api_key:
+    secure: OWJ9gfaNRCV3Xs1gl0grH4PZ56PqlPmpO2iy/8tAzJh7btrJqyEFGECrU44eEu62
